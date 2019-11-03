@@ -16,6 +16,11 @@ public class CalculatedServiceServerImpl implements CalculatedService {
         return x + y;
     }
 
+    @Override
+    public long multiplyThree(long x, long y, long z) {
+        return x * y * z;
+    }
+
     public static void main(String args[]) {
 
         ServerSocket serverSocket = null;
@@ -40,22 +45,38 @@ public class CalculatedServiceServerImpl implements CalculatedService {
     }
 
     private static void handleRequest(Socket socket) {
-
         System.out.println("client connected: " + socket.getRemoteSocketAddress());
+        long result = -1;
+        CalculatedServiceServerImpl cs = new CalculatedServiceServerImpl();
         try {
-            byte[] data = new byte[Long.BYTES*2];
-            socket.getInputStream().read(data);
-            ByteBuffer bs = ByteBuffer.wrap(data);
-            long x = bs.getLong();
-            long y = bs.getLong(Long.BYTES);
-            System.out.println("client send x=" + x +" y=" + y);
-            CalculatedServiceServerImpl cs = new CalculatedServiceServerImpl();
-            long result = cs.addTwo(x, y);
-            ByteBuffer rbs = ByteBuffer.allocate(Long.BYTES);
-            rbs.putLong(result);
-            socket.getOutputStream().write(rbs.array());
-            System.out.println("write result " + result);
-        } catch (IOException e ) {
+            byte[] len = new byte[Integer.BYTES];
+            socket.getInputStream().read(len);
+            ByteBuffer lenBuffer = ByteBuffer.wrap(len);
+            int size = lenBuffer.getInt();
+            if (size > 0) {
+                byte[] params = new byte[size];
+                socket.getInputStream().read(params);
+                ByteBuffer paramsBuffer = ByteBuffer.wrap(params);
+                long mID = paramsBuffer.getLong();
+                if (mID == MethodsNames.M_ADD_TOW.getID()) {
+                    long x = paramsBuffer.getLong(Long.BYTES);
+                    long y = paramsBuffer.getLong(Long.BYTES * 2);
+                    result = cs.addTwo(x, y);
+                    System.out.println(x + "+" + y + "=" + result);
+                } else if (mID == MethodsNames.M_MULTIPLY_THREE.getID()) {
+                    long x = paramsBuffer.getLong(Long.BYTES);
+                    long y = paramsBuffer.getLong(Long.BYTES * 2);
+                    long z = paramsBuffer.getLong(Long.BYTES * 3);
+                    result = cs.multiplyThree(x, y, z);
+                    System.out.println(x + "*" + y + "*" + "z" + "=" + result);
+                } else {
+                    System.out.println("unknow method");
+                }
+                ByteBuffer resultBuffer = ByteBuffer.allocate(Long.BYTES);
+                resultBuffer.putLong(result);
+                socket.getOutputStream().write(resultBuffer.array());
+            }
+        } catch (IOException e) {
             System.out.println("IOException " + e.getMessage());
         } finally {
             try {
