@@ -8,7 +8,7 @@ public interface CalculatedService {
      * @param y
      * @return
      */
-    long addTwo(long x, long y);
+    long addTwo(Long x, Long y);
 
 
     /**
@@ -19,5 +19,5 @@ public interface CalculatedService {
      * @param z
      * @return
      */
-    long multiplyThree(long x, long y, long z);
+    long multiplyThree(Long x, Long y, Long z);
 }
